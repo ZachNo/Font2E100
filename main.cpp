@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
 		fileNameLoc = sFilePath.find_last_of('/') + 1;
 	unsigned int typeLoc = sFilePath.find_last_of('.');
 	std::string tag = sFilePath.substr(fileNameLoc, (sFilePath.size() - fileNameLoc) - (sFilePath.size() - typeLoc));
+	tag += argv[2];
 
 	std::cout << tag << std::endl;
 	bool *character = NULL;
@@ -183,7 +184,36 @@ int main(int argc, char *argv[])
 			curChar++;
 	}
 
+	//Write file #including all the font files
+	std::ofstream indexFile;
+	std::string indexFileName = ".\\font\\" + tag + ".e";
+	indexFile.open(indexFileName);
+	if (!indexFile.good())
+	{
+		std::cout << "Writing to index file failed!" << std::endl;
+		return 1;
+	}
 
+	for (char i = '0'; i <= 'z';)
+	{
+		std::string filename;
+		if (i >= 'a')
+			filename = tag + "_l" + i + ".e";
+		else
+			filename = tag + "_" + i + ".e";
+		indexFile << "#include \"" << filename << "\"" << std::endl;
+
+		if (i == '9')
+			i = 'A';
+		else if (i == 'Z')
+			i = 'a';
+		else
+			i++;
+	}
+
+	indexFile.close();
+
+	std::cout << "Font exported sucessfully" << std::endl;
 
 	system("pause");
 	return 0;
