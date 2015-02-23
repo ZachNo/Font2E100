@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#include <fstream>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 		if (error)
 			continue;
 
-		int charSize = (slot->bitmap.width+1)*slot->bitmap.rows;
+		int charSize = slot->bitmap.width*slot->bitmap.rows;
 		if (charSize == 0)
 		{
 			std::cout << "Font area is zero!";
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
 				j = 0;
 				bufferIndex++;
 			}
-			if (x > slot->bitmap.width)
+			if (x >= slot->bitmap.width)
 			{
 				x = 0;
 				y++;
@@ -181,6 +182,8 @@ int main(int argc, char *argv[])
 		else
 			curChar++;
 	}
+
+
 
 	system("pause");
 	return 0;
