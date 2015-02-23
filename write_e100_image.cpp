@@ -7,7 +7,7 @@ using namespace std;
 //Char array of image data, image width, image height
 //0=monochromic, 1=color
 //Filename
-bool writeImageAsE100(unsigned char image[], int width, int height, bool colorOrMono, char file[], char tag[])
+bool writeImageAsE100(unsigned char image[], int width, int height, bool colorOrMono, const char file[], const char tag[])
 {
 	ofstream outFile;
 	outFile.open(file);
@@ -21,7 +21,16 @@ bool writeImageAsE100(unsigned char image[], int width, int height, bool colorOr
 	outFile << "\t.data\t" << height << endl;
 	int count = width * height;
 	for (int i = 0; i < count; i++)
-		outFile << "\t.data\t" << image[i] << endl;
+	{
+		unsigned long pixel = 0;
+		for (int j = 0; j < 32; j++)
+		{
+			pixel = pixel << 1;
+			pixel = pixel | (bool)image[i];
+			i++;
+		}
+		outFile << "\t.data\t" << pixel << endl;
+	}
 
 	outFile.close();
 	//cout << "Image written successfully!" << endl;

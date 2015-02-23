@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 //#include <freetype.h>
@@ -10,6 +11,8 @@ int main(int argc, char *argv[])
 	//Font file path and size from arguments
 	char *fontFile	= argv[1];
 	int fontSize = atoi(argv[2]);
+
+	std::cout << fontFile << " " << fontSize << std::endl;
 
 	//FreeType required variables
 	FT_Library	fontLib;
@@ -38,7 +41,7 @@ int main(int argc, char *argv[])
 	std::cout << "Font loaded successfully!" << std::endl;
 
 	//Set font size
-	error = FT_Set_Char_Size(fontFace, 0, fontSize * 64, 300, 300);
+	error = FT_Set_Char_Size(fontFace, 0, fontSize * 64, 96, 96);
 	if (error)
 	{
 		std::cout << "Font error when setting font size!" << std::endl;
@@ -51,11 +54,19 @@ int main(int argc, char *argv[])
 
 	bool renderedAll = 0;
 	char curChar = '0';
-	char block = 219;
+	unsigned char block = 219;
 	char none = 32;
 	FT_GlyphSlot  slot = fontFace->glyph;
 
-	char tag = 
+	//Extract font name
+	std::string sFilePath(fontFile);
+	unsigned int fileNameLoc = sFilePath.find_last_of('\\') + 1;
+	if (fileNameLoc == 1)
+		fileNameLoc = sFilePath.find_last_of('/') + 1;
+	unsigned int typeLoc = sFilePath.find_last_of('.');
+	std::string tag = sFilePath.substr(fileNameLoc, (sFilePath.size() - fileNameLoc) - (sFilePath.size() - typeLoc));
+
+	std::cout << tag << std::endl;
 
 	while (!renderedAll)
 	{
@@ -75,22 +86,34 @@ int main(int argc, char *argv[])
 			<< "\nwidth: " << slot->bitmap.width<< std::endl;
 
 		//Draw character to console
-		/*for (int y = 0; y < slot->bitmap.rows; y++)
+		for (int y = 0; y < slot->bitmap.rows; y++)
 		{
 			for (int x = 0; x < slot->bitmap.width; x++)
 			{
-				bool out = slot->bitmap.buffer[y*slot->bitmap.width + x];
+				bool out = slot->bitmap.buffer[y*slot->bitmap.width + x] > 127;
 				if (out)
 					std::cout << block;
 				else
 					std::cout << none;
+				/*for (int j = 0; j < 8; j++)
+				{
+					bool pixel = slot->bitmap.buffer[y*slot->bitmap.width + x] << (8-j);
+					std::cout << pixel << " ";
+					j++;
+				}*/
+				//std::cout << (int)slot->bitmap.buffer[y*slot->bitmap.width + x] << " ";
 			}
-			std::cout << std::endl;
-		}*/
+			std::cout << " " << y << std::endl;
+		}
 
 		//Write file using my new sparkly function
-		char 
-		bool writeError = writeImageAsE100(slot->bitmap.buffer, slot->bitmap.width, slot->bitmap.rows, 0, char file[], char tag[]);
+		std::string charTag;
+		if (curChar != ' ')
+			charTag = tag + "_" + curChar;
+		else
+			charTag = tag + "_SP";
+		std::string fileName = charTag + ".e";
+		bool writeError = writeImageAsE100(slot->bitmap.buffer, slot->bitmap.width, slot->bitmap.rows, 0, fileName.c_str(), charTag.c_str());
 
 		curChar++;
 		if (curChar >= '0')
