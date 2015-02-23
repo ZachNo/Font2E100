@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
+#include <bitset>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-//#include <freetype.h>
 
 #include "write_e100_image.h"
 
@@ -67,57 +67,119 @@ int main(int argc, char *argv[])
 	std::string tag = sFilePath.substr(fileNameLoc, (sFilePath.size() - fileNameLoc) - (sFilePath.size() - typeLoc));
 
 	std::cout << tag << std::endl;
-
+	bool *character = NULL;
 	while (!renderedAll)
 	{
 		FT_UInt glyph_index = FT_Get_Char_Index(fontFace, curChar);
-		error = FT_Load_Glyph(fontFace, glyph_index, FT_LOAD_MONOCHROME); //Load character in monochrome
+		error = FT_Load_Glyph(fontFace, glyph_index, FT_LOAD_DEFAULT); //Load character in monochrome
 		if (error)
 			continue;
 
-		error = FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_NORMAL);
+		error = FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_MONO);
 		if (error)
 			continue;
+
+		int charSize = (slot->bitmap.width+1)*slot->bitmap.rows;
+		if (charSize == 0)
+		{
+			std::cout << "Font area is zero!";
+			return 1;
+		}
+		character = new bool[charSize];
 
 		//Character bitmap stats
-		std::cout << "bitmap_left: " << slot->bitmap_left
+		/*std::cout << "bitmap_left: " << slot->bitmap_left
 			<< "\nbitmap_top: " << slot->bitmap_top
 			<< "\nrows: " << slot->bitmap.rows
-			<< "\nwidth: " << slot->bitmap.width<< std::endl;
+			<< "\nwidth: " << slot->bitmap.width
+			<< "\npitch: " << slot->bitmap.pitch << std::endl;*/
+		
+		//Display bit array
+		/*for (int i = 0; i < (slot->bitmap.rows * slot->bitmap.pitch); i++)
+		{
+			if (i % slot->bitmap.pitch == 0)
+				std::cout << std::endl;
+			std::bitset<8> row(slot->bitmap.buffer[i]);
+			std::cout << row << " ";
+		}
+		std::cout << std::endl;*/
 
 		//Draw character to console
-		for (int y = 0; y < slot->bitmap.rows; y++)
+		unsigned int x = 0;
+		int bufferIndex = 0;
+		int j = 0;
+		int index = 0;
+		for (unsigned int y = 0; y < slot->bitmap.rows;)
 		{
-			for (int x = 0; x < slot->bitmap.width; x++)
+			unsigned char anded = 0;
+			switch (j)
 			{
-				bool out = slot->bitmap.buffer[y*slot->bitmap.width + x] > 127;
-				if (out)
-					std::cout << block;
-				else
-					std::cout << none;
-				/*for (int j = 0; j < 8; j++)
-				{
-					bool pixel = slot->bitmap.buffer[y*slot->bitmap.width + x] << (8-j);
-					std::cout << pixel << " ";
-					j++;
-				}*/
-				//std::cout << (int)slot->bitmap.buffer[y*slot->bitmap.width + x] << " ";
+			case 7: anded = 1; break;
+			case 6: anded = 2; break;
+			case 5: anded = 4; break;
+			case 4: anded = 8; break;
+			case 3: anded = 16; break;
+			case 2: anded = 32; break;
+			case 1: anded = 64; break;
+			case 0: anded = 128; break;
 			}
-			std::cout << " " << y << std::endl;
+
+			bool pixel = slot->bitmap.buffer[bufferIndex] & anded;
+			character[index] = pixel;
+
+			/*if (pixel)
+				std::cout << block;
+			else
+				std::cout << none;*/
+
+			j++;
+			x++;
+			index++;
+			if (j >= 8)
+			{
+				j = 0;
+				bufferIndex++;
+			}
+			if (x > slot->bitmap.width)
+			{
+				x = 0;
+				y++;
+				bufferIndex = slot->bitmap.pitch*y;
+				j = 0;
+				//std::cout << std::endl;
+			}
 		}
+
+		//std::cout << index << std::endl;
 
 		//Write file using my new sparkly function
 		std::string charTag;
-		if (curChar != ' ')
-			charTag = tag + "_" + curChar;
-		else
+		if (curChar == ' ')
 			charTag = tag + "_SP";
-		std::string fileName = charTag + ".e";
-		bool writeError = writeImageAsE100(slot->bitmap.buffer, slot->bitmap.width, slot->bitmap.rows, 0, fileName.c_str(), charTag.c_str());
+		else if (curChar >= 'a')
+			charTag = tag + "_l" + curChar;
+		else
+			charTag = tag + "_" + curChar;
+		std::string fileName = ".\\font\\" + charTag + ".e";
 
-		curChar++;
-		if (curChar >= '0')
+
+		bool writeError = writeImageAsE100(character, slot->bitmap.width, slot->bitmap.rows, fileName.c_str(), charTag.c_str());
+		if (writeError)
+		{
+			std::cout << "Write failed, terminating!" << std::endl;
+			return 1;
+		}
+		
+		delete[] character;
+
+		if (curChar == '9')
+			curChar = 'A';
+		else if (curChar == 'Z')
+			curChar = 'a';
+		else if (curChar == 'z')
 			renderedAll = 1;
+		else
+			curChar++;
 	}
 
 	system("pause");
