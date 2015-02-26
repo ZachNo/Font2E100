@@ -151,27 +151,28 @@ int main(int argc, char *argv[])
 				//std::cout << std::endl;
 			}
 		}
-
 		//std::cout << index << std::endl;
 
 		//Write file using my new sparkly function
 		std::string charTag;
+		std::string charAdTag;
 		if (curChar == ' ')
 			charTag = tag + "_SP";
 		else if (curChar >= 'a')
 			charTag = tag + "_l" + curChar;
 		else
 			charTag = tag + "_" + curChar;
+		charAdTag = charTag + "_ad";
 		std::string fileName = ".\\font\\" + charTag + ".e";
 
 
-		bool writeError = writeImageAsE100(character, slot->bitmap.width, slot->bitmap.rows, fileName.c_str(), charTag.c_str());
+		bool writeError = writeImageAsE100(character, slot->bitmap.width, slot->bitmap.rows, fileName.c_str(), charTag.c_str(), charAdTag.c_str());
 		if (writeError)
 		{
 			std::cout << "Write failed, terminating!" << std::endl;
 			return 1;
 		}
-		
+
 		delete[] character;
 
 		if (curChar == '9')
@@ -201,7 +202,7 @@ int main(int argc, char *argv[])
 			filename = tag + "_l" + i + ".e";
 		else
 			filename = tag + "_" + i + ".e";
-		indexFile << "#include \"" << filename << "\"" << std::endl;
+		indexFile << "#include " << filename << std::endl;
 
 		if (i == '9')
 			i = 'A';

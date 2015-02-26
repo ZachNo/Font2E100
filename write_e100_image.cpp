@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <bitset>
 using namespace std;
 
 #include "write_e100_image.h"
@@ -21,8 +22,8 @@ bool writeImageAsE100(const unsigned char *image, int width, int height, const c
 	int count = width * height;
 	for (int i = 0; i < count; i++)
 	{
-		unsigned long pixel = 0;
-		for (int j = 0; j < 32; j++)
+		long pixel = 0;
+		for (int j = 0; j < 8; j++)
 		{
 			pixel = pixel << 1;
 			pixel = pixel | (bool)image[i];
@@ -37,7 +38,7 @@ bool writeImageAsE100(const unsigned char *image, int width, int height, const c
 }
 
 //monochromic
-bool writeImageAsE100(const bool *image, int width, int height, const char file[], const char tag[])
+bool writeImageAsE100(const bool *image, int width, int height, const char file[], const char tag[], const char adTag[])
 {
 	ofstream outFile;
 	outFile.open(file);
@@ -47,18 +48,22 @@ bool writeImageAsE100(const bool *image, int width, int height, const char file[
 		return 1;
 	}
 
+	outFile << adTag << "\t.data\t" << tag << endl;
 	outFile << tag << "\t.data\t" << width << endl;
 	outFile << "\t.data\t" << height << endl;
 	int count = width * height;
+	int j = 0;
 	for (int i = 0; i < count; i++)
 	{
-		unsigned long pixel = 0;
-		for (int j = 0; j < 32; j++)
+		long pixel = 0;
+		for (j = 0; j < 32; j++)
 		{
 			pixel = pixel << 1;
-			pixel = pixel | image[i];
+			if (i < count)
+				pixel = pixel | image[i];
 			i++;
 		}
+		i--;
 		outFile << "\t.data\t" << pixel << endl;
 	}
 
