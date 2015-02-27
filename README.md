@@ -3,6 +3,7 @@
 Renders the alphanumeric characters of a font to E100 memory array files.
 ### Requirements:
 * FreeType2
+* a *fonts* folder in the location of the executable
 
 ### Usage:
 The compiled program is controlled via command-line.
