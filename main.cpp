@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
 	std::cout << "Font exported sucessfully" << std::endl;
 
-	system("pause");
+	//system("pause");
 	return 0;
 }
 
